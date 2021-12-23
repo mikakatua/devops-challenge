@@ -10,7 +10,6 @@ provider "google" {
 #}
 
 data "google_client_config" "default" {}
-#data "google_compute_default_service_account" "default" {}
 
 module "network" {
   source  = "terraform-google-modules/network/google"
@@ -49,17 +48,16 @@ module "gke" {
   subnetwork                  = module.network.subnets_names[0]
   ip_range_pods               = module.network.subnets_secondary_ranges[0].*.range_name[0]
   ip_range_services           = module.network.subnets_secondary_ranges[0].*.range_name[1]
-#  compute_engine_service_account = google_compute_default_service_account.default.name
   create_service_account      = false
 
   node_pools = [
     {
       name                      = "node-pool"
       machine_type              = "e2-medium"
-#      node_locations            = "europe-west1-b,europe-west1-c,europe-west1-d"
       min_count                 = 1
       max_count                 = 2
       disk_size_gb              = 30
     },
   ]
 }
+
