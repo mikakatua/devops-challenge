@@ -36,7 +36,7 @@ jobs:
         uses: google-github-actions/auth@v0
         with:
           workload_identity_provider: projects/388147619444/locations/global/workloadIdentityPools/devops-challenge-pool/providers/github-provider
-          service_account: github-cicd@${{ PROJECT_ID }}.iam.gserviceaccount.com
+          service_account: github-cicd@${{ env.PROJECT_ID }}.iam.gserviceaccount.com
 
       # Configure Docker to use the gcloud command-line tool as a credential
       # helper for authentication
