@@ -27,33 +27,35 @@ jobs:
     # The type of runner that the job will run on
     runs-on: ubuntu-latest
 
+    permissions:
+      contents: 'read'
+      id-token: 'write'
+
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v2
 
-      # Setup gcloud CLI
-
-      - name: 'Set up Cloud SDK'
+      # Authengicate GitHub Actions Workflows to Google Cloud via Workload Identity Federation
+      - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v0
         with:
-          credentials_json: ${{ secrets.GCP_SA_KEY }}
+          workload_identity_provider: projects/388147619444/locations/global/workloadIdentityPools/devops-challenge-pool/providers/github-provider
+          service_account: github-cicd@${{ env.PROJECT_ID }}.iam.gserviceaccount.com
 
       # Configure Docker to use the gcloud command-line tool as a credential
       # helper for authentication
       - run: |-
-          gcloud --quiet auth configure-docker
+          gcloud --quiet auth configure-docker $GKE_ZONE-docker.pkg.dev
 
+      # Generate tag with the commit hash
       - name: Docker meta
         id: meta
         uses: docker/metadata-action@v3
         with:
           images: ${{ env.REPO_IMAGE }}/${{ env.APP_NAME }}
           tags: |
-            type=ref,event=branch
-            type=ref,event=pr
-            type=semver,pattern={{version}}
-            type=semver,pattern={{major}}.{{minor}}
+            type=sha,prefix=,format=short
             
       - name: Build and push
         uses: docker/build-push-action@v2
