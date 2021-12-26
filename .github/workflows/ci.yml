@@ -50,8 +50,11 @@ jobs:
         with:
           images: ${{ env.REPO_IMAGE }}/${{ env.APP_NAME }}
           tags: |
+            type=ref,event=branch
+            type=ref,event=pr
             type=semver,pattern={{version}}
-          
+            type=semver,pattern={{major}}.{{minor}}
+            
       - name: Build and push
         uses: docker/build-push-action@v2
         with:
