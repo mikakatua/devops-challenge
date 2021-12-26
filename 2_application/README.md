@@ -120,3 +120,28 @@ gcloud iam service-accounts keys create ~/github-cicd-key.json \
 gh secret set GCP_PROJECT_ID -b $PROJECT_ID
 gh secret set GCP_SA_KEY < ~/github-cicd-key.json
 ```
+
+Setting up Workload Identity Federation for GitHub Actions
+```
+gcloud iam workload-identity-pools create "devops-challenge-pool" \
+  --project="${PROJECT_ID}" \
+  --location="global" \
+  --display-name="Demo pool"
+
+WORKLOAD_IDENTITY_POOL_ID=$(gcloud iam workload-identity-pools list --location=global --filter="name: devops-challenge" --format="value(name)")
+
+gcloud iam workload-identity-pools providers create-oidc "github-provider" \
+  --project="${PROJECT_ID}" \
+  --location="global" \
+  --workload-identity-pool="devops-challenge-pool" \
+  --display-name="GitHub provider" \
+  --attribute-mapping="google.subject=assertion.sub,attribute.actor=assertion.actor,attribute.aud=assertion.aud" \
+  --issuer-uri="https://token.actions.githubusercontent.com"
+
+WORKLOAD_IDENTITY_PROVIDER_ID=$(gcloud iam workload-identity-pools providers list --workload-identity-pool=$WORKLOAD_IDENTITY_POOL_ID --location=global --filter="name: devops-challenge" --format="value(name)")
+
+gcloud iam service-accounts add-iam-policy-binding "github-cicd@${PROJECT_ID}.iam.gserviceaccount.com" \
+  --member="principalSet://iam.googleapis.com/${WORKLOAD_IDENTITY_POOL_ID}/*" \
+  --role="roles/iam.workloadIdentityUser"
+```
+
