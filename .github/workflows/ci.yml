@@ -15,10 +15,10 @@ on:
 
 env:
   PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
-  GKE_CLUSTER: ${{ env.PROJECT_ID }}-gke-cluster
+  GKE_CLUSTER: ${{ secrets.GCP_PROJECT_ID }}-gke-cluster
   GKE_ZONE: europe-west6
-  DEPLOYMENT_NAME: demo-app
-  IMAGE: ${{ env.GKE_ZONE }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.PROJECT_ID }}-repo/${{ env.DEPLOYMENT_NAME }}
+  APP_NAME: demo-app
+  REPO_IMAGE: ${{ env.GKE_ZONE }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.GCP_PROJECT_ID }}-repo
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
@@ -48,7 +48,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v3
         with:
-          images: ${{ env.IMAGE }}
+          images: ${{ env.REPO_IMAGE }}/${{ env.APP_NAME }}
           tags: |
             type=semver,pattern={{version}}
           
