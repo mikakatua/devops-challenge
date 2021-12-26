@@ -36,6 +36,8 @@ jobs:
         uses: docker/metadata-action@v3
         with:
           images: ${{ env.GKE_ZONE }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.PROJECT_ID }}-repo/${{ env.DEPLOYMENT_NAME }}
+          tags: |
+            type=semver,pattern={{version}}
           
       - name: Build
         uses: docker/build-push-action@v2
