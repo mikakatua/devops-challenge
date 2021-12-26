@@ -4,6 +4,7 @@ In this folder you will find the steps to deploy the web application to GKE in 2
 ## Prerequisites
 It is supposed that you have completed the [steps to deploy the infrastructure](../1_infrastructure). Then, you only need:
 * The [Docker Engine](https://docs.docker.com/get-docker/) installed
+* The [GitHub CLI](https://cli.github.com/) installed and configured
 
 ## Manual deployment
 The following commands deploy the application from a Bash shell. The CI/CD automated deployment is preferred, this deployment is provided only for learning purposes, to understand the basic steps to deploy the application.
@@ -15,12 +16,12 @@ We build the image of the [original application](../app) locally and push it to 
 REGION=$(terraform -chdir=../1_infrastructure output -raw region)
 IMAGE=$(terraform -chdir=../1_infrastructure output -raw repository_name)/demo-app:v1
 # Create the container image
-docker build --build-arg SOURCE=https://raw.githubusercontent.com/mikakatua/devops-challenge/master/app/server.go -t $IMAGE .
+docker build -f Dockerfile.v1 -t $IMAGE .
 ```
 
 This step is only requred if you have never pushed an image to GCP Artifact Registry. Then, you have to configure the credential helper to authenticate with the registry
 ```
-gcloud auth configure-docker $REGION-docker.pkg.dev
+gcloud --quiet auth configure-docker $REGION-docker.pkg.dev
 ```
 
 Finally, push the image to the repository
@@ -29,7 +30,7 @@ docker push $IMAGE
 ```
 
 ### Kubernetes deployment
-The following steps deploy the application in the `default` namespace and make it reachable from Internet using HTTPS. For this example we only use the `kubectl` tool to create the resources, instead of using YALM manifests.
+The following steps deploy the application in the `default` namespace and make it reachable from Internet using HTTPS. For this example we only use the `kubectl` tool to create the resources instead of using YALM manifests.
 ```
 # Create the deployment and the service
 kubectl create deployment demo-app --image=$IMAGE --replicas=3
@@ -91,4 +92,27 @@ kubectl logs deployment/demo-app --all-containers
 Note: You will see multiple `Hello from my new fresh server` lines because the load balancer periodically performs a health check of the Pods
 
 ## CI/CD deployment
+Create a GCP service account to grant the CI/CD pipeline access to GKE
+```
+gcloud iam service-accounts create github-cicd \
+  --display-name="GitHub Service Account" \
+  --project=$PROJECT_ID
 
+gcloud projects add-iam-policy-binding $PROJECT_ID \
+  --member="serviceAccount:github-cicd@$PROJECT_ID.iam.gserviceaccount.com" \
+  --role="roles/container.admin"
+
+gcloud projects add-iam-policy-binding $PROJECT_ID \
+  --member="serviceAccount:github-cicd@$PROJECT_ID.iam.gserviceaccount.com" \
+  --role="roles/storage.admin"
+
+gcloud projects add-iam-policy-binding $PROJECT_ID \
+  --member="serviceAccount:github-cicd@$PROJECT_ID.iam.gserviceaccount.com" \
+  --role="roles/container.clusterViewer"
+
+gcloud iam service-accounts keys create ~/github-cicd-key.json \
+  --iam-account="github-cicd@$PROJECT_ID.iam.gserviceaccount.com"
+
+gh secret set GCP_PROJECT_ID -b $PROJECT_ID
+gh secret set GCP_SA_KEY < ~/github-cicd-key.json
+```
