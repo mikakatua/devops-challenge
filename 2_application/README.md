@@ -110,6 +110,10 @@ gcloud projects add-iam-policy-binding $PROJECT_ID \
   --member="serviceAccount:github-cicd@$PROJECT_ID.iam.gserviceaccount.com" \
   --role="roles/container.clusterViewer"
 
+gcloud projects add-iam-policy-binding $PROJECT_ID \
+  --member="serviceAccount:github-cicd@$PROJECT_ID.iam.gserviceaccount.com" \
+  --role="roles/artifactregistry.repoAdmin"
+
 gcloud iam service-accounts keys create ~/github-cicd-key.json \
   --iam-account="github-cicd@$PROJECT_ID.iam.gserviceaccount.com"
 
