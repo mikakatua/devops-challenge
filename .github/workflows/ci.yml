@@ -1,14 +1,16 @@
-# This is a basic workflow to help you get started with Actions
+# Build & Test workflow
 
 name: CI
 
-# Controls when the workflow will run
 on:
-  # Triggers the workflow on push or pull request events but only for the develop branch
+  # Triggers the workflow on push events to develop branch
   push:
-    branches: [ develop ]
-  pull_request:
-    branches: [ develop ]
+    branches:
+      - develop
+    paths: 
+      - '2_application/**'
+      - '2_application/**.md'
+      - '!2_application/static/**'
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
@@ -20,18 +22,15 @@ env:
   APP_NAME: demo-app
   REPO_IMAGE: europe-west6-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.GCP_PROJECT_ID }}-repo
 
-# A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  # This workflow contains a single job called "build"
   build-and-test:
-    # The type of runner that the job will run on
     runs-on: ubuntu-latest
 
+    # Set permissions for GitHub API
     permissions:
       contents: 'read'
       id-token: 'write'
 
-    # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v2
