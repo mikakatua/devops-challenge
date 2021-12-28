@@ -1,34 +1,5 @@
 name: CI/CD
 
-inputs:
-  cluster_name:
-    description: Provided by Terraform output
-    required: true
-  github_identity_provider:
-    description: Provided by Terraform output
-    required: true
-  github_service_account:
-    description: Provided by Terraform output
-    required: true
-  k8s_application:
-    description: Provided by Terraform output
-    required: true
-  k8s_namespace:
-    description: Provided by Terraform output
-    required: true
-  k8s_service_account:
-    description: Provided by Terraform output
-    required: true
-  project_id:
-    description: Provided by Terraform output
-    required: true
-  region:
-    description: Provided by Terraform output
-    required: true
-  repository_name:
-    description: Provided by Terraform output
-    required: true
- 
 on:
   # Triggers the workflow on push events
   push:
@@ -42,7 +13,35 @@ on:
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
-         
+    inputs:
+      cluster_name:
+        description: Provided by Terraform output
+        required: true
+      github_identity_provider:
+        description: Provided by Terraform output
+        required: true
+      github_service_account:
+        description: Provided by Terraform output
+        required: true
+      k8s_application:
+        description: Provided by Terraform output
+        required: true
+      k8s_namespace:
+        description: Provided by Terraform output
+        required: true
+      k8s_service_account:
+        description: Provided by Terraform output
+        required: true
+      project_id:
+        description: Provided by Terraform output
+        required: true
+      region:
+        description: Provided by Terraform output
+        required: true
+      repository_name:
+        description: Provided by Terraform output
+        required: true
+          
 jobs:
   build:
     if: ${{ github.ref == 'refs/heads/develop' }}
@@ -61,8 +60,8 @@ jobs:
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v0
         with:
-          workload_identity_provider: ${{ inputs.github_identity_provider }}
-          service_account: ${{ inputs.github_service_account }}
+          workload_identity_provider: ${{ github.event.inputs.github_identity_provider }}
+          service_account: ${{ github.event.inputs.github_service_account }}
 
       # Configure Docker to use the gcloud command-line tool as a credential
       # helper for authentication
