@@ -60,8 +60,8 @@ jobs:
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v0
         with:
-          workload_identity_provider: ${{ env.INPUT_GITHUB_IDENTITY_PROVIDER }}
-          service_account: ${{ env.INPUT_GITHUB_SERVICE_ACCOUNT }}
+          workload_identity_provider: ${{ inputs.github_identity_provider }}
+          service_account: ${{ inputs.github_service_account }}
 
       # Configure Docker to use the gcloud command-line tool as a credential
       # helper for authentication
