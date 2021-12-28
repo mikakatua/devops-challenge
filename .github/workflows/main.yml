@@ -97,7 +97,6 @@ jobs:
         with:
           builder: ${{ steps.buildx.outputs.name }}
           push: true
-          load: true
           context: ${{ github.workspace }}/2_application
           tags: ${{ steps.meta.outputs.tags }}
           cache-from: type=local,src=/tmp/.buildx-cache
@@ -115,7 +114,6 @@ jobs:
         run: 'kubectl get pods'
       
 
-jobs:
   deploy:
     if: ${{ github.ref == 'refs/heads/master' }}
     runs-on: ubuntu-latest
