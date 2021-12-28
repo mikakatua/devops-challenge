@@ -3,14 +3,6 @@ provider "google" {
   region  = var.region
 }
 
-#provider "kubernetes" {
-#  host                   = "https://${module.gke.endpoint}"
-#  token                  = data.google_client_config.default.access_token
-#  cluster_ca_certificate = base64decode(module.gke.ca_certificate)
-#}
-
-data "google_client_config" "default" {}
-
 module "network" {
   source  = "terraform-google-modules/network/google"
   version = "4.0.1"
@@ -49,6 +41,7 @@ module "gke" {
   ip_range_pods               = module.network.subnets_secondary_ranges[0].*.range_name[0]
   ip_range_services           = module.network.subnets_secondary_ranges[0].*.range_name[1]
   create_service_account      = false
+  identity_namespace          = "enabled" 
 
   node_pools = [
     {

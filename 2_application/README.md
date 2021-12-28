@@ -31,6 +31,14 @@ docker push $IMAGE
 
 ### Kubernetes deployment
 The following steps deploy the application in the `default` namespace and make it reachable from Internet using HTTPS. For this example we only use the `kubectl` tool to create the resources instead of using YALM manifests.
+
+Before we start, we need to fetch the Kubernetes credentials to use with kubectl
+```
+CLUSTER_NAME=$(terraform -chdir=../1_infrastructure output -raw cluster_name)
+gcloud container clusters get-credentials $CLUSTER_NAME --region $REGION
+```
+By default, credentials are written to `~/.kube/config`. You can provide an alternate path by setting the `KUBECONFIG` environment variable.
+
 ```
 # Create the deployment and the service
 kubectl create deployment demo-app --image=$IMAGE --replicas=3

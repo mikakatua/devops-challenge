@@ -1,2 +1,2 @@
-project_id = "devops-challenge-336005"
-region     = "europe-west6"
+project_id = "YOUR_PROJECT_ID"
+region     = "us-east1"
