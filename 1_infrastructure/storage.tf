@@ -1,5 +1,5 @@
 resource "google_storage_bucket" "demo-bucket" {
-  name     = "${var.app_name}-static"
+  name     = "${var.project_id}-${var.app_name}-static"
   project  = var.project_id
   location = var.region
 }

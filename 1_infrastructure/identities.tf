@@ -52,6 +52,7 @@ resource "google_service_account_iam_binding" "demo-app-iam" {
   members = [
     "serviceAccount:${var.project_id}.svc.id.goog[${var.k8s_namespace}/${var.k8s_service_account}]"
   ]
+  depends_on = [ module.gke ]
 }
 
 # Service account for GitHub Actions

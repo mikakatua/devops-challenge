@@ -30,7 +30,9 @@ Replace `0X0X0X-0X0X0X-0X0X0X` with *your* billing account ID
 
 Finally, we enable the services we need to use with the command
 ```
-gcloud services enable compute.googleapis.com container.googleapis.com cloudresourcemanager.googleapis.com
+gcloud services enable compute.googleapis.com container.googleapis.com cloudresourcemanager.googleapis.com \
+  artifactregistry.googleapis.com \
+  --project=$PROJECT_ID
 ```
 
 ## Create the Terraform service account
@@ -39,8 +41,7 @@ These commands create the service account and grants the permissions
 gcloud iam service-accounts create terraform-automation \
   --display-name="Terraform Service Account" \
   --project=$PROJECT_ID
-```
-```
+
 gcloud projects add-iam-policy-binding $PROJECT_ID \
   --member="serviceAccount:terraform-automation@$PROJECT_ID.iam.gserviceaccount.com" \
   --role="roles/owner"
@@ -57,13 +58,13 @@ gcloud iam service-accounts keys create ~/terraform-automation-key.json \
 ## Create the Terraform backend storage
 Create a bucket on Google Cloud Storage (GCS) where Terraform store its state
 ```
-gsutil mb -p $PROJECT_ID -c REGIONAL -l europe-west6 -b on gs://devops-challenge-tfstate
+gsutil mb -p $PROJECT_ID -c REGIONAL -l us-east1 -b on gs://$PROJECT_ID-tfstate
 ```
 Feel free to change the region at your convenience
 
 Enable object versioning for the bucket to keep old versions of the state
 ```
-gsutil versioning set on gs://devops-challenge-tfstate
+gsutil versioning set on gs://$PROJECT_ID-tfstate
 ```
 Note: It is recommended to set also a lifecycle rule to the bucket to automatically delete old versions
 
@@ -75,7 +76,7 @@ export GOOGLE_CREDENTIALS=~/terraform-automation-key.json
 
 Edit the `terraform.tfvars` and set *your* project ID and the region. Alternatively, you can set the environment variables `GOOGLE_PROJECT` and `GOOGLE_REGION`
 
-Run this command to download the required modules and initialize the backend
+Run this command to initialize the backend and download the required modules
 ```
 terraform init
 ```
@@ -84,13 +85,15 @@ Run this command to create the resouces
 terraform apply
 ```
 
-At this point, we have finished creating the infrastructure and we are ready to [deploy the application](../2_application). We have:
+At this point, we have finished creating the infrastructure. We have:
 * A GKE cluster to run our Kubernetes workload resources
 * A container repository to store the application docker image
 * A GCS bucket to store the application static files 
 * The Service accounts configured for the application and GitHub Actions
 * A Kubernetes namespace for the application
 * A Kubernetes service account for the application
+
+We are ready to continue and [deploy the application](../2_application)
 
 ## Clean up the resources
 To delete all the provisioned remote objects managed by Terraform, run
