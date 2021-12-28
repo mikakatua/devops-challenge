@@ -66,17 +66,18 @@ jobs:
       # Configure Docker to use the gcloud command-line tool as a credential
       # helper for authentication
       - run: |-
-          gcloud --quiet auth configure-docker ${INPUT_REGION}-docker.pkg.dev
+          gcloud --quiet auth configure-docker ${{ github.event.inputs.region }}-docker.pkg.dev
 
       # Generate tag with the commit hash
       - name: Docker meta
         id: meta
         uses: docker/metadata-action@v3
         with:
-          images: ${{ env.INPUT_REPOSITORY_NAME }}/${{ env.INPUT_K8S_APPLICATION }}
+          images: ${{ github.event.inputs.repository_name }}/${{ github.event.inputs.k8s_application }}
           tags: |
             type=sha,prefix=,format=short
-            
+            type=raw,value=latest
+
       # Configure docker daemon to use BuildKit
       - name: Set up Docker Buildx
         id:   buildx
@@ -105,9 +106,9 @@ jobs:
       - name: Get Kubernetes credentials
         uses: google-github-actions/get-gke-credentials@v0
         with:
-          cluster_name: ${{ env.INPUT_CLUSTER_NAME }}
-          location: ${{ env.INPUT_REGION }}
-          project_id: ${{ env.INPUT_PROJECT_ID }}
+          cluster_name: ${{ github.event.inputs.cluster_name }}
+          location: ${{ github.event.inputs.region }}
+          project_id: ${{ github.event.inputs.project_id }}
 
       # The KUBECONFIG env var is automatically exported and picked up by kubectl.
       - id: 'get-pods'
@@ -127,23 +128,19 @@ jobs:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v2
 
-      - name: Set environmental variables
-        run: |
-          echo "REPOSITORY=${REGION}-docker.pkg.dev/${PROJECT_ID}/${PROJECT_ID}-repo" >> $GITHUB_ENV
-
       # Authengicate GitHub Actions Workflows to Google Cloud via Workload Identity Federation
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v0
         with:
-          workload_identity_provider: ${{ env.ID_PROVIDER }}
-          service_account: ${{ env.SERVICE_ACCOUNT }}
+          workload_identity_provider: ${{ github.event.inputs.github_identity_provider }}
+          service_account: ${{ github.event.inputs.github_service_account }}
 
       - name: Get Kubernetes credentials
         uses: google-github-actions/get-gke-credentials@v0
         with:
-          cluster_name: ${{ env.GKE_CLUSTER }}
-          location: ${{ env.REGION }}
-          project_id: ${{ env.PROJECT_ID }}
+          cluster_name: ${{ github.event.inputs.cluster_name }}
+          location: ${{ github.event.inputs.region }}
+          project_id: ${{ github.event.inputs.project_id }}
 
       # The KUBECONFIG env var is automatically exported and picked up by kubectl.
       - id: 'get-pods'
