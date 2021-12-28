@@ -40,3 +40,8 @@ output "k8s_service_account" {
   description = "Kubernetes service account"
   value = kubernetes_service_account.demo-app.metadata.0.name
 }
+
+output "k8s_application" {
+  description = "Application name"
+  value = var.app_name
+}

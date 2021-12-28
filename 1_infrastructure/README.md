@@ -89,8 +89,9 @@ At this point, we have finished creating the infrastructure. We have:
 * A GKE cluster to run our Kubernetes workload resources
 * A container repository to store the application docker image
 * A GCS bucket to store the application static files 
-* The Service accounts configured for the application and GitHub Actions
-* A Kubernetes namespace for the application
+* A Service account for the application to access the bucket
+* A Service account for GitHub Actions to deploy Kubernetes resources
+* A Kubernetes namespace for the application resources
 * A Kubernetes service account for the application
 
 We are ready to continue and [deploy the application](../2_application)
