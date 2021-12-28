@@ -11,6 +11,7 @@ The original application has been improved and the following funcionalities have
 ## Prerequisites
 It is supposed that you have completed the [steps to deploy the infrastructure](../1_infrastructure). Then, you only need:
 * The [Docker Engine](https://docs.docker.com/get-docker/) installed
+* A [GitHub account](https://github.com/) to be able to run the CI/CD pipeline
 * The [GitHub CLI](https://cli.github.com/) installed and configured
 
 ## Manual deployment
@@ -117,56 +118,27 @@ done
 Note: The logs will show multiple entries because the load balancer periodically performs a health check of the Pods
 
 ## CI/CD deployment
-Create a GCP service account to grant the CI/CD pipeline access to GKE
+In order to run the GitHub Actions workflow, you have to copy the current repository to your GitHub account and configure some settings. The following command creates a fork of the repository in your account
 ```
-gcloud iam service-accounts create github-cicd \
-  --display-name="GitHub Service Account" \
-  --project=$PROJECT_ID
-
-gcloud projects add-iam-policy-binding $PROJECT_ID \
-  --member="serviceAccount:github-cicd@$PROJECT_ID.iam.gserviceaccount.com" \
-  --role="roles/container.admin"
-
-gcloud projects add-iam-policy-binding $PROJECT_ID \
-  --member="serviceAccount:github-cicd@$PROJECT_ID.iam.gserviceaccount.com" \
-  --role="roles/storage.admin"
-
-gcloud projects add-iam-policy-binding $PROJECT_ID \
-  --member="serviceAccount:github-cicd@$PROJECT_ID.iam.gserviceaccount.com" \
-  --role="roles/container.clusterViewer"
-
-gcloud projects add-iam-policy-binding $PROJECT_ID \
-  --member="serviceAccount:github-cicd@$PROJECT_ID.iam.gserviceaccount.com" \
-  --role="roles/artifactregistry.repoAdmin"
-
-gcloud iam service-accounts keys create ~/github-cicd-key.json \
-  --iam-account="github-cicd@$PROJECT_ID.iam.gserviceaccount.com"
-
-gh secret set GCP_PROJECT_ID -b $PROJECT_ID
-gh secret set GCP_SA_KEY < ~/github-cicd-key.json
+gh repo fork mikakatua/devops-challenge --clone=false
+# Get the owner of the forked repo
+OWNER=$(gh repo view devops-challenge --json owner --jq ".owner.login")
 ```
 
-Setting up Workload Identity Federation for GitHub Actions
+We have to set some workflow variables:
 ```
-gcloud iam workload-identity-pools create "devops-challenge-pool" \
-  --project="${PROJECT_ID}" \
-  --location="global" \
-  --display-name="Demo pool"
-
-WORKLOAD_IDENTITY_POOL_ID=$(gcloud iam workload-identity-pools list --location=global --filter="name: devops-challenge" --format="value(name)")
-
-gcloud iam workload-identity-pools providers create-oidc "github-provider" \
-  --project="${PROJECT_ID}" \
-  --location="global" \
-  --workload-identity-pool="devops-challenge-pool" \
-  --display-name="GitHub provider" \
-  --attribute-mapping="google.subject=assertion.sub,attribute.actor=assertion.actor,attribute.aud=assertion.aud" \
-  --issuer-uri="https://token.actions.githubusercontent.com"
-
-WORKLOAD_IDENTITY_PROVIDER_ID=$(gcloud iam workload-identity-pools providers list --workload-identity-pool=$WORKLOAD_IDENTITY_POOL_ID --location=global --filter="name: devops-challenge" --format="value(name)")
-
-gcloud iam service-accounts add-iam-policy-binding "github-cicd@${PROJECT_ID}.iam.gserviceaccount.com" \
-  --member="principalSet://iam.googleapis.com/${WORKLOAD_IDENTITY_POOL_ID}/*" \
-  --role="roles/iam.workloadIdentityUser"
+gh secret set GCP_PROJECT_ID -b $PROJECT_ID -R $OWNER/devops-challenge
+gh secret set GCP_GITHUB_PROVIDER -b $(terraform -chdir=../1_infrastructure output -raw github_identity_provider) -R $OWNER/devops-challenge
+gh secret set GCP_GITHUB_SA -b $(terraform -chdir=../1_infrastructure output -raw github_service_account) -R $OWNER/devops-challenge
 ```
+
+```
+terraform -chdir=../1_infrastructure output -json | \
+  jq 'with_entries(.value |= .value)' | \
+  grep -v -e kubernetes_endpoint -e master_kubernetes_version > cicd_inputs.json
+```
+
+```
+gh workflow run CI/CD -r develop --json < cicd_inputs.json
+````
 

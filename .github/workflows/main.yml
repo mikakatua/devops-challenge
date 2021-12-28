@@ -103,7 +103,15 @@ jobs:
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache
 
-      - run: 'helm version'
+      - name: K8s deploy      
+        run: |-
+          helm template ${{ github.workspace }}/2_application/k8s \
+            --set application_name=${{ github.event.inputs.k8s_application }} \
+            --set bucket_name=devops-336509-demo-app-static \
+            --set image.repository=${{ github.event.inputs.repository_name }}/${{ github.event.inputs.k8s_application }} \
+            --set image.tag=latest \
+            --set service_account=${{ github.event.inputs.k8s_service_account }} \
+          | kubectl -n ${{ github.event.inputs.k8s_namespace }} apply -f -
 
   deploy:
     if: ${{ github.ref == 'refs/heads/master' }}
