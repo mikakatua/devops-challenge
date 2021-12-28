@@ -13,15 +13,35 @@ on:
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
-
-env:
-  PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
-  REGION: us-east1
-  APP_NAME: demo-app
-  GKE_CLUSTER: ${{ secrets.GCP_PROJECT_ID }}-gke-cluster
-  ID_PROVIDER: ${{ secrets.GCP_GITHUB_PROVIDER }}
-  SERVICE_ACCOUNT: ${{ secrets.GCP_GITHUB_SA }}
-
+    inputs:
+      cluster_name:
+        description: Provided by Terraform output
+        required: true
+      github_identity_provider:
+        description: Provided by Terraform output
+        required: true
+      github_service_account:
+        description: Provided by Terraform output
+        required: true
+      k8s_application:
+        description: Provided by Terraform output
+        required: true
+      k8s_namespace:
+        description: Provided by Terraform output
+        required: true
+      k8s_service_account:
+        description: Provided by Terraform output
+        required: true
+      project_id:
+        description: Provided by Terraform output
+        required: true
+      region:
+        description: Provided by Terraform output
+        required: true
+      repository_name:
+        description: Provided by Terraform output
+        required: true
+          
 jobs:
   build:
     if: ${{ github.ref == 'refs/heads/develop' }}
@@ -36,28 +56,24 @@ jobs:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v2
 
-      - name: Set environmental variables
-        run: |
-          echo "REPOSITORY=${REGION}-docker.pkg.dev/${PROJECT_ID}/${PROJECT_ID}-repo" >> $GITHUB_ENV
-
       # Authengicate GitHub Actions Workflows to Google Cloud via Workload Identity Federation
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v0
         with:
-          workload_identity_provider: ${{ env.ID_PROVIDER }}
-          service_account: ${{ env.SERVICE_ACCOUNT }}
+          workload_identity_provider: ${{ env.INPUT_GITHUB_IDENTITY_PROVIDER }}
+          service_account: ${{ env.INPUT_GITHUB_SERVICE_ACCOUNT }}
 
       # Configure Docker to use the gcloud command-line tool as a credential
       # helper for authentication
       - run: |-
-          gcloud --quiet auth configure-docker ${REGION}-docker.pkg.dev
+          gcloud --quiet auth configure-docker ${INPUT_REGION}-docker.pkg.dev
 
       # Generate tag with the commit hash
       - name: Docker meta
         id: meta
         uses: docker/metadata-action@v3
         with:
-          images: ${{ env.REPOSITORY }}/${{ env.APP_NAME }}
+          images: ${{ env.INPUT_REPOSITORY_NAME }}/${{ env.INPUT_K8S_APPLICATION }}
           tags: |
             type=sha,prefix=,format=short
             
@@ -90,9 +106,9 @@ jobs:
       - name: Get Kubernetes credentials
         uses: google-github-actions/get-gke-credentials@v0
         with:
-          cluster_name: ${{ env.GKE_CLUSTER }}
-          location: ${{ env.REGION }}
-          project_id: ${{ env.PROJECT_ID }}
+          cluster_name: ${{ env.INPUT_CLUSTER_NAME }}
+          location: ${{ env.INPUT_REGION }}
+          project_id: ${{ env.INPUT_PROJECT_ID }}
 
       # The KUBECONFIG env var is automatically exported and picked up by kubectl.
       - id: 'get-pods'
