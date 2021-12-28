@@ -27,8 +27,13 @@ output "repository_name" {
 }
 
 output "github_identity_provider" {
-  description = "GitHub identity"
+  description = "GitHub identity provider"
   value = google_iam_workload_identity_pool_provider.github-provider.name
+}
+
+output "github_service_account" {
+  description = "Service account for GitHub Actions"
+  value = google_service_account.github-sa.email
 }
 
 output "k8s_namespace" {
