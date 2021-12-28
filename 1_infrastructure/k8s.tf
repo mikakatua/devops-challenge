@@ -18,7 +18,7 @@ resource "kubernetes_namespace" "demo-app" {
   }
 }
 
-data "kubernetes_service_account" "demo-app" {
+resource "kubernetes_service_account" "demo-app" {
   metadata {
     name = var.k8s_service_account
     namespace = kubernetes_namespace.demo-app.metadata.0.name

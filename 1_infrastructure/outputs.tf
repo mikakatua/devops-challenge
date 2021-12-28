@@ -38,5 +38,5 @@ output "k8s_namespace" {
 
 output "k8s_service_account" {
   description = "Kubernetes service account"
-  value = data.kubernetes_service_account.demo-app.metadata
+  value = kubernetes_service_account.demo-app.metadata.0.name
 }
