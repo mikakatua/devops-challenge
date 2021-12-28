@@ -103,17 +103,7 @@ jobs:
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache
 
-      - name: Get Kubernetes credentials
-        uses: google-github-actions/get-gke-credentials@v0
-        with:
-          cluster_name: ${{ github.event.inputs.cluster_name }}
-          location: ${{ github.event.inputs.region }}
-          project_id: ${{ github.event.inputs.project_id }}
-
-      # The KUBECONFIG env var is automatically exported and picked up by kubectl.
-      - id: 'get-pods'
-        run: 'kubectl get pods'
-      
+      - run: 'helm version'
 
   deploy:
     if: ${{ github.ref == 'refs/heads/master' }}
@@ -146,3 +136,5 @@ jobs:
       - id: 'get-pods'
         run: 'kubectl get pods'
       
+
+     
