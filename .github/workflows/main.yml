@@ -110,7 +110,7 @@ jobs:
           location: ${{ github.event.inputs.region }}
           project_id: ${{ github.event.inputs.project_id }}
 
-       - name: Deploy to Kubernetes
+      - name: Deploy to Kubernetes
         run: |-
           helm template ${{ github.workspace }}/2_application/k8s \
             --set application_name=${{ github.event.inputs.k8s_application }} \
