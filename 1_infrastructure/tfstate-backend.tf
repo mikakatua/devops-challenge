@@ -1,6 +1,7 @@
+# Warning: Variables may not be used here.
 terraform {
   backend "gcs" {
-    bucket      = "${var.project_id}-tfstate"
+    bucket      = "devops-challenge-tfstate"
     prefix      = "terraform/state"
   }
 }

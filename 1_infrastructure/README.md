@@ -58,13 +58,13 @@ gcloud iam service-accounts keys create ~/terraform-automation-key.json \
 ## Create the Terraform backend storage
 Create a bucket on Google Cloud Storage (GCS) where Terraform store its state
 ```
-gsutil mb -p $PROJECT_ID -c REGIONAL -l us-east1 -b on gs://$PROJECT_ID-tfstate
+gsutil mb -p $PROJECT_ID -c REGIONAL -l us-east1 -b on gs://devops-challenge-tfstate
 ```
-Feel free to change the region at your convenience
+Feel free to change the region and the bucket name at your convenience
 
 Enable object versioning for the bucket to keep old versions of the state
 ```
-gsutil versioning set on gs://$PROJECT_ID-tfstate
+gsutil versioning set on gs://devops-challenge-tfstate
 ```
 Note: It is recommended to set also a lifecycle rule to the bucket to automatically delete old versions
 
