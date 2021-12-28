@@ -26,3 +26,18 @@ variable "ip_range_services" {
   default = "gke-services-subnet"
 }
 
+variable "app_name" {
+  description = "The application name"
+  default = "demo-app"
+}
+
+variable "k8s_namespace" {
+  description = "Kubernetes namespace for the applicaiton"
+  default = "demo-app"
+}
+
+variable "k8s_service_account" {
+  description = "Kubernetes service account for the applicaiton"
+  default = "demo-app"
+}
+

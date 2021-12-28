@@ -22,15 +22,17 @@ We save the project ID in a variable for later use
 ```
 PROJECT_ID=$(gcloud projects list --filter="name: devops-challenge" --format="value(projectId)")
 ```
-Before you can create resources, you have to link the project with a billing account. You can do it with the command
+Before we can create resources, we have to link the project with a billing account. You can do it with the command
 ```
 gcloud beta billing projects link $PROJECT_ID --billing-account=0X0X0X-0X0X0X-0X0X0X
 ```
-Replace `0X0X0X-0X0X0X-0X0X0X` with your billing account ID
+Replace `0X0X0X-0X0X0X-0X0X0X` with *your* billing account ID
 
-Finally, enable the services you need to use with the command
+Finally, we enable the services we need to use with the command
 ```
-gcloud services enable compute.googleapis.com container.googleapis.com
+gcloud services enable compute.googleapis.com container.googleapis.com cloudresourcemanager.googleapis.com \
+  artifactregistry.googleapis.com \
+  --project=$PROJECT_ID
 ```
 
 ## Create the Terraform service account
@@ -39,16 +41,15 @@ These commands create the service account and grants the permissions
 gcloud iam service-accounts create terraform-automation \
   --display-name="Terraform Service Account" \
   --project=$PROJECT_ID
-```
-```
+
 gcloud projects add-iam-policy-binding $PROJECT_ID \
   --member="serviceAccount:terraform-automation@$PROJECT_ID.iam.gserviceaccount.com" \
-  --role="roles/editor"
+  --role="roles/owner"
 ```
-Note: For the sake of simplicity we granted the `Editor` role to the service account. This role allows create and delete most of the GCP resources.
+**Warning**: For the sake of simplicity we granted the `Owner` role to the service account. This role allows create and delete all GCP resources.
 From a security perspective, we should enforce the principle of least privilege and grant only the specific roles needed.
 
-Finally, we download the service account private key that will be used later with the terraform CLI
+Finally, we download the service account private key that will be used later with the Terraform CLI
 ```
 gcloud iam service-accounts keys create ~/terraform-automation-key.json \
   --iam-account="terraform-automation@$PROJECT_ID.iam.gserviceaccount.com"
@@ -57,9 +58,9 @@ gcloud iam service-accounts keys create ~/terraform-automation-key.json \
 ## Create the Terraform backend storage
 Create a bucket on Google Cloud Storage (GCS) where Terraform store its state
 ```
-gsutil mb -p $PROJECT_ID -c REGIONAL -l europe-west6 -b on gs://devops-challenge-tfstate
+gsutil mb -p $PROJECT_ID -c REGIONAL -l us-east1 -b on gs://devops-challenge-tfstate
 ```
-Feel free to change the region at your convenience
+Feel free to change the region and the bucket name at your convenience
 
 Enable object versioning for the bucket to keep old versions of the state
 ```
@@ -68,14 +69,14 @@ gsutil versioning set on gs://devops-challenge-tfstate
 Note: It is recommended to set also a lifecycle rule to the bucket to automatically delete old versions
 
 ## Provision the infrastructure
-Before running the terraform commands you have to configure the credentials to authenticate with the GCP API. We will specify the service account key file created before using the `GOOGLE_CREDENTIALS` environment variable
+Before running the Terraform commands we have to configure the credentials to authenticate with the GCP API. We will specify the service account key file created before using the `GOOGLE_CREDENTIALS` environment variable
 ```
 export GOOGLE_CREDENTIALS=~/terraform-automation-key.json
 ```
 
 Edit the `terraform.tfvars` and set *your* project ID and the region. Alternatively, you can set the environment variables `GOOGLE_PROJECT` and `GOOGLE_REGION`
 
-Run this command to download the required modules and initialize the backend
+Run this command to initialize the backend and download the required modules
 ```
 terraform init
 ```
@@ -84,17 +85,16 @@ Run this command to create the resouces
 terraform apply
 ```
 
-Finally, fetch the Kubernetes credentials to use with kubectl
-```
-gcloud container clusters get-credentials $(terraform output -raw cluster_name) \
-  --region $(terraform output -raw region)
-```
-By default, credentials are written to `~/.kube/config`. You can provide an alternate path by setting the `KUBECONFIG` environment variable.
+At this point, we have finished creating the infrastructure. We have:
+* A GKE cluster to run our Kubernetes workload resources
+* A container repository to store the application docker image
+* A GCS bucket to store the application static files 
+* A Service account for the application to access the bucket
+* A Service account for GitHub Actions to deploy Kubernetes resources
+* A Kubernetes namespace for the application resources
+* A Kubernetes service account for the application
 
-Verify that you can connect to your GKE cluster and see some node details
-```
-kubectl get nodes -o wide
-```
+We are ready to continue and [deploy the application](../2_application)
 
 ## Clean up the resources
 To delete all the provisioned remote objects managed by Terraform, run

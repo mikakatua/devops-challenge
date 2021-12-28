@@ -1,0 +1,33 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: demo-app
+  name: demo-app
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: demo-app
+  template:
+    metadata:
+      labels:
+        app: demo-app
+    spec:
+      containers:
+      - image: europe-west6-docker.pkg.dev/devops-challenge-336005/devops-challenge-336005-repo/demo-gcs:v4
+        imagePullPolicy: IfNotPresent
+        name: demo-app
+        securityContext:
+          capabilities:
+            add:
+            - SYS_ADMIN
+          privileged: true
+        lifecycle:
+          postStart:
+            exec:
+              command: [ "gcsfuse", "demo-app-static", "/static" ]
+          preStop:
+            exec:
+              command: [ "fusermount", "-u", "/static" ]
+      serviceAccountName: demo-app
