@@ -31,4 +31,4 @@ spec:
             exec:
               command: [ "fusermount", "-u", "/static" ]
         resources: {{- toYaml .Values.resources | nindent 12 }}
-      serviceAccountName: ${{ .Values.service_account }}
+      serviceAccountName: {{ .Values.service_account }}
