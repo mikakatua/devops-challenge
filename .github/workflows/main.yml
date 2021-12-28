@@ -103,7 +103,14 @@ jobs:
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache
 
-      - name: K8s deploy      
+      - name: Get Kubernetes credentials
+        uses: google-github-actions/get-gke-credentials@v0
+        with:
+          cluster_name: ${{ github.event.inputs.cluster_name }}
+          location: ${{ github.event.inputs.region }}
+          project_id: ${{ github.event.inputs.project_id }}
+
+       - name: Deploy to Kubernetes
         run: |-
           helm template ${{ github.workspace }}/2_application/k8s \
             --set application_name=${{ github.event.inputs.k8s_application }} \
