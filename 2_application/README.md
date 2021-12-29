@@ -141,4 +141,6 @@ terraform -chdir=../1_infrastructure output -json | \
 ```
 gh workflow run CI/CD -r develop --json < cicd_inputs.json
 ````
+BUCKET=$(terraform -chdir=../1_infrastructure output -raw static-web-bucket)
+gsutil cp static/* gs://$BUCKET
 
