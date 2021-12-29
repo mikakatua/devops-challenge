@@ -74,7 +74,7 @@ Before running the Terraform commands we have to configure the credentials to au
 export GOOGLE_CREDENTIALS=~/terraform-automation-key.json
 ```
 
-Edit the `terraform.tfvars` and set *your* project ID and the region. Alternatively, you can set the environment variables `GOOGLE_PROJECT` and `GOOGLE_REGION`
+Edit the `terraform.tfvars` and set *your* project ID and the region. Optionally, you can set the environment variables `GOOGLE_PROJECT` and `GOOGLE_REGION`
 
 Run this command to initialize the backend and download the required modules
 ```
