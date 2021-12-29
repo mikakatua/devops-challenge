@@ -22,7 +22,7 @@ resource "kubernetes_service_account" "demo-app" {
   metadata {
 
     annotations = {
-      "iam.gke.io/gcp-service-account" = "${google_service_account.demo-app-sa.account_id}@${var.project_id}"
+      "iam.gke.io/gcp-service-account" = "${google_service_account.demo-app-sa.account_id}@${var.project_id}.iam.gserviceaccount.com"
     }
 
     name = var.k8s_service_account
