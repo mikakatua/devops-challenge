@@ -113,13 +113,20 @@ jobs:
           location: ${{ github.event.inputs.region }}
           project_id: ${{ github.event.inputs.project_id }}
 
-      - run: |-
-          echo "${{ secrets.TERRAFORM_KEY }}" > ${{ github.workspace }}/terraform-automation-key.json
-          export GOOGLE_CREDENTIALS=${{ github.workspace }}/terraform-automation-key.json
-          terraform -chdir=${{ github.workspace }}/1_infrastructure init
-          terraform -chdir=${{ github.workspace }}/1_infrastructure output
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v1
+        
+      - name: Terraform Init
+        run: terraform -chdir=${{ github.workspace }}/1_infrastructure init
+        env:
+          GOOGLE_CREDENTIALS: ${{ secrets.TERRAFORM_KEY }}
+
+      - name: Terraform Output
+        run: terraform -chdir=${{ github.workspace }}/1_infrastructure output
+        env:
+          GOOGLE_CREDENTIALS: ${{ secrets.TERRAFORM_KEY }}
       
-      - name: K8s deploy      
+      - name: Kubernetes deploy      
         run: |-
           helm template ${{ github.workspace }}/2_application/k8s \
             --set application_name=${{ github.event.inputs.k8s_application }} \
