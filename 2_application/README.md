@@ -3,9 +3,9 @@ In this folder you will find the steps to deploy the web application to GKE in 2
 
 The original application has been improved and the following funcionalities have been added:
 * Improved logging, providing more details of each web request
-* New /form handler to process a form submit POST request
-* New /hello handler that only accepts GET requests
-* Default / handler that serves a stating web site
+* New `/form` handler to process a form submit POST request
+* New `/hello` handler that only accepts GET requests
+* Default `/` handler that serves a stating web site
 * Added 2 unit tests executed during the build
 
 ## Prerequisites
@@ -15,7 +15,7 @@ It is supposed that you have completed the [steps to deploy the infrastructure](
 * The [GitHub CLI](https://cli.github.com/) installed and configured
 
 ## Manual deployment
-The following commands deploy the application from a Bash shell. The CI/CD automated deployment is preferred, this deployment is provided only for learning purposes, to understand the basic steps to deploy the application.
+The following commands deploy the application from a Bash shell. The [CI/CD automated deployment](#cicd-deployment) is preferred, this deployment is provided only for learning purposes, to understand the basic steps to deploy the application
 
 ### Build and push
 We build the image of the application locally and push it to the Artifact Registry in Google Cloud
@@ -105,17 +105,20 @@ gcloud compute backend-services get-health "$(gcloud compute backend-services li
   --filter="name~$APP_NAME" --format="value(name)")" --global --project $PROJECT_ID
 ```
 
-To test the application we can request the endpoint url and search the Pod logs
+To test the application we request the endpoint url. To do so, you can add to your `/etc/hosts` file the value of the `EXTERNAL_IP` pointing to the host `app.example.com`. Alternatively, you can use the `Host` request header
 ```
 curl -H "Host: app.example.com" -k https://$EXTERNAL_IP/hello
+```
 
+Now, search the Pod logs for the request
+```
 for pod in $(kubectl get po -n $NAMESPACE -o jsonpath="{.items[*].metadata.name}")
 do 
   kubectl logs $pod -n $NAMESPACE | grep /hello
 done
 ```
-
 Note: The logs will show multiple entries because the load balancer periodically performs a health check of the Pods
+
 
 ## CI/CD deployment
 In order to run the GitHub Actions workflow, you have to copy the current repository to your GitHub account and configure some settings. The following command creates a fork of the repository in your account
@@ -125,25 +128,30 @@ gh repo fork mikakatua/devops-challenge --clone=false
 OWNER=$(gh repo view devops-challenge --json owner --jq ".owner.login")
 ```
 
-We have to create some repository secrets:
+We have to create some repository secrets that will be used by the GitHub Actions workflow:
 ```
-gh secret set GCP_PROJECT_ID -b $PROJECT_ID -R $OWNER/devops-challenge
-gh secret set GCP_GITHUB_PROVIDER -b $(terraform -chdir=../1_infrastructure output -raw github_identity_provider) -R $OWNER/devops-challenge
-gh secret set GCP_GITHUB_SA -b $(terraform -chdir=../1_infrastructure output -raw github_service_account) -R $OWNER/devops-challenge
+# TLS certifcate and key
 gh secret set TLS_CRT -R $OWNER/devops-challenge < demo-app.crt
 gh secret set TLS_KEY -R $OWNER/devops-challenge < demo-app.key
-gh secret set TERRAFORM_KEY -R $OWNER/devops-challenge < ~/terraform-automation-key.json
+# Private key for the Terraform service account
+cat ~/terraform-automation-key.json | tr -d '\n' | gh secret set TERRAFORM_KEY -R $OWNER/devops-challenge
 ```
+Note: We need remove the new-line chars from the json file to work
 
+Copy the files for the static web site to the GCS bucket
 ```
-terraform -chdir=../1_infrastructure output -json | \
-  jq 'with_entries(.value |= .value)' | \
-  grep -v -e kubernetes_endpoint -e master_kubernetes_version > cicd_inputs.json
-```
-
-```
-gh workflow run CI/CD -r develop --json < cicd_inputs.json
-````
 BUCKET=$(terraform -chdir=../1_infrastructure output -raw static-web-bucket)
 gsutil cp static/* gs://$BUCKET
+```
 
+Finally, to run the workflow go to the url https://github.com/OWNER/devops-challenge/actions (replacing *OWNER* with your GitHub user) and enable the workflows. Then, you will be able to run the workflow pushing any change to the `master` branch. Additionally, you can run it from the command line with
+```
+gh workflow run CI/CD -R $OWNER/devops-challenge
+```
+
+There is also a second workflow called "Manual CI/CD". The difference is that this workflow requires some inputs to work and only can be run manually
+```
+terraform -chdir=../1_infrastructure output -json | \
+  jq 'with_entries(.value |= .value)' > cicd_inputs.json
+gh workflow run CI/CD -r develop --json < cicd_inputs.json
+```
