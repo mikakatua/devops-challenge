@@ -60,9 +60,10 @@ jobs:
 
       - name: Terraform Output
         run: |
-          echo "$(terraform -chdir=${{ github.workspace }}/1_infrastructure output -raw cluster_name)"
-          echo "cluster_name=$(terraform -chdir=${{ github.workspace }}/1_infrastructure output -raw cluster_name)" >> $GITHUB_ENV
-          echo "${{ env.cluster_name }}"
+          VAR=$(terraform -chdir=${{ github.workspace }}/1_infrastructure output -raw cluster_name)
+          echo $VAR
+          #          echo "cluster_name=$(terraform -chdir=${{ github.workspace }}/1_infrastructure output -raw cluster_name)" >> $GITHUB_ENV
+          #          echo "${{ env.cluster_name }}"
         env:
           GOOGLE_CREDENTIALS: ${{ secrets.TERRAFORM_KEY }}
 
