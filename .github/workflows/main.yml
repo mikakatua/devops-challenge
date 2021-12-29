@@ -94,7 +94,7 @@ jobs:
 
       # Configure Docker to use the gcloud command-line tool as a credential
       # helper for authentication
-      - name: Add Docker credential helper    
+      - name: Add Docker credential helper
         run: |-
           gcloud --quiet auth configure-docker ${{ env.region }}-docker.pkg.dev
 
@@ -103,7 +103,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v3
         with:
-          images: ${{ env.repository_name }}/${{ github.event.inputs.k8s_application }}
+          images: ${{ env.repository_name }}/${{ env.k8s_application }}
           tags: |
             type=sha,prefix=,format=short
             type=raw,value=latest
@@ -147,7 +147,7 @@ jobs:
           helm template ${{ github.workspace }}/2_application/k8s \
             --set application_name=${{ env.k8s_application }} \
             --set bucket_name=${{ env.static-web-bucket }} \
-            --set image.repository=${{ env.repository_name }}/${{ github.event.inputs.k8s_application }} \
+            --set image.repository=${{ env.repository_name }}/${{ env.k8s_application }} \
             --set image.tag=latest \
             --set service_account=${{ env.k8s_service_account }} \
             --set ingress.certificate="${{ secrets.TLS_CRT }}" \
