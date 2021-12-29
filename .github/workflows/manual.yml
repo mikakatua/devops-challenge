@@ -60,7 +60,7 @@ jobs:
 
       - name: Terraform Output
         run: |
-          terraform -chdir=${{ github.workspace }}/1_infrastructure output >> $GITHUB_ENV
+          terraform -chdir=${{ github.workspace }}/1_infrastructure output  | sed 's/ = /=/' >> $GITHUB_ENV
           echo "${{ env.cluster_name }}"
           echo "${{ env.github_identity_provider }}"
           echo "${{ env.static-web-bucket }}"
