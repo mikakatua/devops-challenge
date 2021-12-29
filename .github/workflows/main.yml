@@ -1,53 +1,18 @@
 name: CI/CD
 
 on:
-  # Triggers the workflow on push events
+  # Triggers the workflow on push events to master
   push:
     branches:
-      - develop
       - master
     paths: 
       - '2_application/**'
       - '!2_application/**.md'
       - '!2_application/static/**'
 
-  # Allows you to run this workflow manually from the Actions tab
-  workflow_dispatch:
-    inputs:
-      cluster_name:
-        description: Provided by Terraform output
-        required: true
-      github_identity_provider:
-        description: Provided by Terraform output
-        required: true
-      github_service_account:
-        description: Provided by Terraform output
-        required: true
-      k8s_application:
-        description: Provided by Terraform output
-        required: true
-      k8s_namespace:
-        description: Provided by Terraform output
-        required: true
-      k8s_service_account:
-        description: Provided by Terraform output
-        required: true
-      project_id:
-        description: Provided by Terraform output
-        required: true
-      region:
-        description: Provided by Terraform output
-        required: true
-      repository_name:
-        description: Provided by Terraform output
-        required: true
-      static-web-bucket:
-        description: Provided by Terraform output
-        required: true
-          
 jobs:
-  build:
-    if: ${{ github.ref == 'refs/heads/develop' }}
+  cicd:
+    name: Build & Deploy
     runs-on: ubuntu-latest
 
     # Set permissions for GitHub API
@@ -58,6 +23,23 @@ jobs:
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v2
+
+      # Setup Terraform CLI
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v1
+
+      # Initialize Terraform
+      - name: Terraform Init
+        run: terraform -chdir=${{ github.workspace }}/1_infrastructure init
+        env:
+          GOOGLE_CREDENTIALS: ${{ secrets.TERRAFORM_KEY }}
+      
+      # Set environment variables from Terraform outputs
+      - name: Set environment
+        run: |
+          echo "CLUSTER_NAME=$(terraform -chdir=${{ github.workspace }}/1_infrastructure output cluster_name) >> $GITHUB_ENV
+        env:
+          GOOGLE_CREDENTIALS: ${{ secrets.TERRAFORM_KEY }}
 
       # Authengicate GitHub Actions Workflows to Google Cloud via Workload Identity Federation
       - name: Authenticate to Google Cloud
@@ -122,7 +104,11 @@ jobs:
           GOOGLE_CREDENTIALS: ${{ secrets.TERRAFORM_KEY }}
 
       - name: Terraform Output
-        run: terraform -chdir=${{ github.workspace }}/1_infrastructure output
+        run: |
+          terraform -chdir=${{ github.workspace }}/1_infrastructure output >> $GITHUB_ENV
+          echo "${{ env.cluster_name }}"
+          echo "${{ env.github_identity_provider }}"
+          echo "${{ env.static-web-bucket }}"
         env:
           GOOGLE_CREDENTIALS: ${{ secrets.TERRAFORM_KEY }}
       
