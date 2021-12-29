@@ -113,7 +113,11 @@ jobs:
           location: ${{ github.event.inputs.region }}
           project_id: ${{ github.event.inputs.project_id }}
 
-      - run: terraform version
+      - run: |-
+          echo "${{ secrets.TERRAFORM_KEY }}" > ${{ github.workspace }}/terraform-automation-key.json
+          export GOOGLE_CREDENTIALS=${{ github.workspace }}/terraform-automation-key.json
+          terraform -chdir=${{ github.workspace }}/1_infrastructure init
+          terraform -chdir=${{ github.workspace }}/1_infrastructure output
       
       - name: K8s deploy      
         run: |-

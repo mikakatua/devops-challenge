@@ -125,13 +125,14 @@ gh repo fork mikakatua/devops-challenge --clone=false
 OWNER=$(gh repo view devops-challenge --json owner --jq ".owner.login")
 ```
 
-We have to set some workflow variables:
+We have to create some repository secrets:
 ```
 gh secret set GCP_PROJECT_ID -b $PROJECT_ID -R $OWNER/devops-challenge
 gh secret set GCP_GITHUB_PROVIDER -b $(terraform -chdir=../1_infrastructure output -raw github_identity_provider) -R $OWNER/devops-challenge
 gh secret set GCP_GITHUB_SA -b $(terraform -chdir=../1_infrastructure output -raw github_service_account) -R $OWNER/devops-challenge
-gh secret set TLS_CRT < demo-app.crt
-gh secret set TLS_KEY < demo-app.key
+gh secret set TLS_CRT -R $OWNER/devops-challenge < demo-app.crt
+gh secret set TLS_KEY -R $OWNER/devops-challenge < demo-app.key
+gh secret set TERRAFORM_KEY -R $OWNER/devops-challenge < ~/terraform-automation-key.json
 ```
 
 ```
