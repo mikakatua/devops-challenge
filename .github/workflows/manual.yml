@@ -50,6 +50,24 @@ jobs:
       - name: Check out
         uses: actions/checkout@v2
 
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v1
+
+      - name: Terraform Init
+        run: terraform -chdir=${{ github.workspace }}/1_infrastructure init
+        env:
+          GOOGLE_CREDENTIALS: ${{ secrets.TERRAFORM_KEY }}
+
+      - name: Terraform Output
+        run: |
+          terraform -chdir=${{ github.workspace }}/1_infrastructure output >> $GITHUB_ENV
+          echo "${{ env.cluster_name }}"
+          echo "${{ env.github_identity_provider }}"
+          echo "${{ env.static-web-bucket }}"
+        env:
+          GOOGLE_CREDENTIALS: ${{ secrets.TERRAFORM_KEY }}
+
+
       # Authengicate GitHub Actions Workflows to Google Cloud via Workload Identity Federation
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v0
