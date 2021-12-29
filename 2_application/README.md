@@ -155,3 +155,8 @@ terraform -chdir=../1_infrastructure output -json | \
   jq 'with_entries(.value |= .value)' > cicd_inputs.json
 gh workflow run CI/CD -r develop --json < cicd_inputs.json
 ```
+
+To see the results of the executions you can go to github.com, to the Actions tab, or use the CLI 
+```
+gh run view -R $OWNER/devops-challenge
+```
