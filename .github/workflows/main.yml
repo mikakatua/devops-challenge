@@ -110,6 +110,8 @@ jobs:
           location: ${{ github.event.inputs.region }}
           project_id: ${{ github.event.inputs.project_id }}
 
+      - run: terraform version
+      
       - name: K8s deploy      
         run: |-
           helm template ${{ github.workspace }}/2_application/k8s \
