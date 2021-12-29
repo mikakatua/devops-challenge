@@ -37,7 +37,46 @@ jobs:
       # Set environment variables from Terraform outputs
       - name: Set environment
         run: |
-          echo "CLUSTER_NAME=$(terraform -chdir=${{ github.workspace }}/1_infrastructure output cluster_name) >> $GITHUB_ENV
+          echo 'cluster_name<<EOF' >> $GITHUB_ENV
+          terraform -chdir=${{ github.workspace }}/1_infrastructure output -raw cluster_name | grep Terraform | cut -f1 -d: >> $GITHUB_ENV
+          echo 'EOF' >> $GITHUB_ENV
+
+          echo 'github_identity_provider<<EOF' >> $GITHUB_ENV
+          terraform -chdir=${{ github.workspace }}/1_infrastructure output -raw github_identity_provider | grep Terraform | cut -f1 -d: >> $GITHUB_ENV
+          echo 'EOF' >> $GITHUB_ENV
+
+          echo 'github_service_account<<EOF' >> $GITHUB_ENV
+          terraform -chdir=${{ github.workspace }}/1_infrastructure output -raw github_service_account | grep Terraform | cut -f1 -d: >> $GITHUB_ENV
+          echo 'EOF' >> $GITHUB_ENV
+
+          echo 'k8s_application<<EOF' >> $GITHUB_ENV
+          terraform -chdir=${{ github.workspace }}/1_infrastructure output -raw k8s_application | grep Terraform | cut -f1 -d: >> $GITHUB_ENV
+          echo 'EOF' >> $GITHUB_ENV
+
+          echo 'k8s_namespace<<EOF' >> $GITHUB_ENV
+          terraform -chdir=${{ github.workspace }}/1_infrastructure output -raw k8s_namespace | grep Terraform | cut -f1 -d: >> $GITHUB_ENV
+          echo 'EOF' >> $GITHUB_ENV
+
+          echo 'k8s_service_account<<EOF' >> $GITHUB_ENV
+          terraform -chdir=${{ github.workspace }}/1_infrastructure output -raw k8s_service_account | grep Terraform | cut -f1 -d: >> $GITHUB_ENV
+          echo 'EOF' >> $GITHUB_ENV
+
+          echo 'project_id<<EOF' >> $GITHUB_ENV
+          terraform -chdir=${{ github.workspace }}/1_infrastructure output -raw project_id | grep Terraform | cut -f1 -d: >> $GITHUB_ENV
+          echo 'EOF' >> $GITHUB_ENV
+
+          echo 'region<<EOF' >> $GITHUB_ENV
+          terraform -chdir=${{ github.workspace }}/1_infrastructure output -raw region | grep Terraform | cut -f1 -d: >> $GITHUB_ENV
+          echo 'EOF' >> $GITHUB_ENV
+
+          echo 'repository_name<<EOF' >> $GITHUB_ENV
+          terraform -chdir=${{ github.workspace }}/1_infrastructure output -raw repository_name | grep Terraform | cut -f1 -d: >> $GITHUB_ENV
+          echo 'EOF' >> $GITHUB_ENV
+
+          echo 'static-web-bucket<<EOF' >> $GITHUB_ENV
+          terraform -chdir=${{ github.workspace }}/1_infrastructure output -raw static-web-bucket | grep Terraform | cut -f1 -d: >> $GITHUB_ENV
+          echo 'EOF' >> $GITHUB_ENV
+
         env:
           GOOGLE_CREDENTIALS: ${{ secrets.TERRAFORM_KEY }}
 
@@ -45,20 +84,20 @@ jobs:
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v0
         with:
-          workload_identity_provider: ${{ github.event.inputs.github_identity_provider }}
-          service_account: ${{ github.event.inputs.github_service_account }}
+          workload_identity_provider: ${{ env.github_identity_provider }}
+          service_account: ${{ env.github_service_account }}
 
       # Configure Docker to use the gcloud command-line tool as a credential
       # helper for authentication
       - run: |-
-          gcloud --quiet auth configure-docker ${{ github.event.inputs.region }}-docker.pkg.dev
+          gcloud --quiet auth configure-docker ${{ env.region }}-docker.pkg.dev
 
       # Generate tag with the commit hash
       - name: Docker meta
         id: meta
         uses: docker/metadata-action@v3
         with:
-          images: ${{ github.event.inputs.repository_name }}/${{ github.event.inputs.k8s_application }}
+          images: ${{ env.repository_name }}/${{ github.event.inputs.k8s_application }}
           tags: |
             type=sha,prefix=,format=short
             type=raw,value=latest
@@ -91,9 +130,9 @@ jobs:
       - name: Get Kubernetes credentials
         uses: google-github-actions/get-gke-credentials@v0
         with:
-          cluster_name: ${{ github.event.inputs.cluster_name }}
-          location: ${{ github.event.inputs.region }}
-          project_id: ${{ github.event.inputs.project_id }}
+          cluster_name: ${{ env.cluster_name }}
+          location: ${{ env.region }}
+          project_id: ${{ env.project_id }}
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v1
@@ -115,12 +154,12 @@ jobs:
       - name: Kubernetes deploy      
         run: |-
           helm template ${{ github.workspace }}/2_application/k8s \
-            --set application_name=${{ github.event.inputs.k8s_application }} \
-            --set bucket_name=${{ github.event.inputs.static-web-bucket }} \
-            --set image.repository=${{ github.event.inputs.repository_name }}/${{ github.event.inputs.k8s_application }} \
+            --set application_name=${{ env.k8s_application }} \
+            --set bucket_name=${{ env.static-web-bucket }} \
+            --set image.repository=${{ env.repository_name }}/${{ github.event.inputs.k8s_application }} \
             --set image.tag=latest \
-            --set service_account=${{ github.event.inputs.k8s_service_account }} \
+            --set service_account=${{ env.k8s_service_account }} \
             --set ingress.certificate="${{ secrets.TLS_CRT }}" \
             --set ingress.key="${{ secrets.TLS_KEY }}" \
-          | kubectl -n ${{ github.event.inputs.k8s_namespace }} apply -f -
+          | kubectl -n ${{ env.k8s_namespace }} apply -f -
 
