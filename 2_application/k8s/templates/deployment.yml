@@ -1,0 +1,34 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: {{ .Values.application_name }}
+  name: {{ template "deployment.name" . }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ .Values.application_name }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.application_name }}
+    spec:
+      containers:
+      - image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
+        name: {{ .Values.application_name }}
+        securityContext:
+          capabilities:
+            add:
+            - SYS_ADMIN
+          privileged: true
+        lifecycle:
+          postStart:
+            exec:
+              command: [ "gcsfuse", "{{ .Values.bucket_name }}", "/static" ]
+          preStop:
+            exec:
+              command: [ "fusermount", "-u", "/static" ]
+        resources: {{- toYaml .Values.resources | nindent 12 }}
+      serviceAccountName: {{ .Values.service_account }}

@@ -1,0 +1,21 @@
+---
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+replicaCount: 3
+image:
+  repository: "mikakatua/my-webapp"
+  tag: latest
+  pullPolicy: Always
+service:
+  type: ClusterIP
+  externalPort: 8080
+  internalPort: 8080
+ingress:
+  host: app.example.com
+resources:
+  limits:
+    cpu: 0.3
+    memory: 128Mi
+  requests:
+    cpu: 100m
+    memory: 64Mi

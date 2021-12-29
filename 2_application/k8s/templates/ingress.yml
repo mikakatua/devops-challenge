@@ -4,20 +4,20 @@ metadata:
   annotations:
     kubernetes.io/ingress.class: gce
     networking.gke.io/v1beta1.FrontendConfig: http-to-https
-  name: demo-app-ing
+  name: {{ template "ingress.name" . }}
 spec:
   rules:
-  - host: app.example.com
+  - host: {{ .Values.ingress.host }}
     http:
       paths:
       - backend:
           service:
-            name: demo-app-svc
+            name: {{ template "service.name" . }}
             port:
-              number: 8080
+              number: {{ .Values.service.externalPort }}
         path: /
         pathType: Prefix
   tls:
   - hosts:
-    - app.example.com
-    secretName: demo-app-secret
+    - {{ .Values.ingress.host }}
+    secretName: {{ template "secret.name" . }}

@@ -11,15 +11,15 @@ output "cluster_name" {
   value       = module.gke.name
 }
 
-output "kubernetes_endpoint" {
-  sensitive = true
-  value = module.gke.endpoint
-}
+#output "kubernetes_endpoint" {
+#  sensitive = true
+#  value = module.gke.endpoint
+#}
 
-output "master_kubernetes_version" {
-  description = "The master Kubernetes version"
-  value       = module.gke.master_version
-}
+#output "master_kubernetes_version" {
+#  description = "The master Kubernetes version"
+#  value       = module.gke.master_version
+#}
 
 output "repository_name" {
   description = "Artifact Registry repository"
@@ -49,4 +49,9 @@ output "k8s_service_account" {
 output "k8s_application" {
   description = "Application name"
   value = var.app_name
+}
+
+output "static-web-bucket" {
+  description = "GCS bucket for the static files"
+  value = google_storage_bucket.demo-bucket.name
 }
