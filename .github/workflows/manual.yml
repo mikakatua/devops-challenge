@@ -61,12 +61,14 @@ jobs:
       - name: Terraform Output
         run: |
           VAR=$(terraform -chdir=${{ github.workspace }}/1_infrastructure output -raw cluster_name)
-          echo $VAR
+          echo "cluster_name=$VAR" >> $GITHUB_ENV
           #          echo "cluster_name=$(terraform -chdir=${{ github.workspace }}/1_infrastructure output -raw cluster_name)" >> $GITHUB_ENV
           #          echo "${{ env.cluster_name }}"
         env:
           GOOGLE_CREDENTIALS: ${{ secrets.TERRAFORM_KEY }}
 
+      - run: |
+          echo "${{ env.cluster_name }}"
 
       # Authengicate GitHub Actions Workflows to Google Cloud via Workload Identity Federation
       - name: Authenticate to Google Cloud
