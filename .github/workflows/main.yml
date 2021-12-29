@@ -123,7 +123,7 @@ jobs:
             --set image.repository=${{ github.event.inputs.repository_name }}/${{ github.event.inputs.k8s_application }} \
             --set image.tag=latest \
             --set service_account=${{ github.event.inputs.k8s_service_account }} \
-            --set ingress.certificate=${{ secrets.TLS_CRT }} \
-            --set ingress.key=${{ secrets.TLS_KEY }}
+            --set ingress.certificate="${{ secrets.TLS_CRT }}" \
+            --set ingress.key="${{ secrets.TLS_KEY }}" \
           | kubectl -n ${{ github.event.inputs.k8s_namespace }} apply -f -
 
