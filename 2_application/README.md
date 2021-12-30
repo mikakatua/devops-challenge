@@ -1,11 +1,11 @@
 # Application deployment
 In this folder you will find the steps to deploy the web application to GKE in 2 different ways, using the Bash shell and GitHub Actions
 
-The original application has been improved and the following funcionalities have been added:
+The original application has been improved and the following functionalities have been added:
 * Improved logging, providing more details of each web request
 * New `/form` handler to process a form submit POST request
 * New `/hello` handler that only accepts GET requests
-* Default `/` handler that serves a stating web site
+* Default `/` handler that serves a static web site
 * Added 2 unit tests executed during the build
 
 ## Prerequisites
@@ -28,7 +28,7 @@ IMAGE=$(terraform -chdir=../1_infrastructure output -raw repository_name)/$APP_N
 docker build -f Dockerfile -t $IMAGE .
 ```
 
-This step is only requred if you have never pushed an image to GCP Artifact Registry in that region. Then, you have to configure the credential helper to authenticate with the registry
+This step is only required if you have never pushed an image to GCP Artifact Registry in that region. Then, you have to configure the credential helper to authenticate with the registry
 ```
 gcloud --quiet auth configure-docker $REGION-docker.pkg.dev
 ```
@@ -49,7 +49,7 @@ gcloud container clusters get-credentials $CLUSTER_NAME --region $REGION \
 ```
 By default, credentials are written to `~/.kube/config`. You can provide an alternate path by setting the `KUBECONFIG` environment variable.
 
-Deploy the application and create a service. The static web will not work with this deployment because we need a custom deployment to mount the bucket into the pods. This will be done later in the CI/CD deployment
+Deploy the application and create a service. The static web site will not work with this deployment because we need a custom deployment to mount the bucket into the pods. This will be done later in the CI/CD deployment
 ```
 # Create the deployment and the service
 NAMESPACE=$(terraform -chdir=../1_infrastructure output -raw k8s_namespace)
