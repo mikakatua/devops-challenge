@@ -49,6 +49,7 @@ gcloud container clusters get-credentials $CLUSTER_NAME --region $REGION \
 ```
 By default, credentials are written to `~/.kube/config`. You can provide an alternate path by setting the `KUBECONFIG` environment variable.
 
+Deploy the application and create a service. The static web will not work with this deployment because we need a custom deployment to mount the bucket into the pods. This will be done later in the CI/CD deployment
 ```
 # Create the deployment and the service
 NAMESPACE=$(terraform -chdir=../1_infrastructure output -raw k8s_namespace)
@@ -131,8 +132,8 @@ OWNER=$(gh repo view devops-challenge --json owner --jq ".owner.login")
 We have to create some repository secrets that will be used by the GitHub Actions workflow:
 ```
 # TLS certifcate and key
-gh secret set TLS_CRT -R $OWNER/devops-challenge < demo-app.crt
-gh secret set TLS_KEY -R $OWNER/devops-challenge < demo-app.key
+gh secret set TLS_CRT -R $OWNER/devops-challenge < $APP_NAME.crt
+gh secret set TLS_KEY -R $OWNER/devops-challenge < $APP_NAME.key
 # Private key for the Terraform service account
 cat ~/terraform-automation-key.json | tr -d '\n' | gh secret set TERRAFORM_KEY -R $OWNER/devops-challenge
 ```
