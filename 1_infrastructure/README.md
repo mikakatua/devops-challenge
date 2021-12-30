@@ -80,7 +80,7 @@ Run this command to initialize the backend and download the required modules
 ```
 terraform init
 ```
-Run this command to create the resouces
+Run this command to create the resources
 ```
 terraform apply
 ```
